@@ -37,7 +37,10 @@ class AbstractResource(abc.ABC):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as exc:
-            raise exceptions.HTTPError from exc
+            wrapper_exc = exceptions.status_map.get(
+                exc.response.status_code, exceptions.HTTPError
+            )
+            raise wrapper_exc from exc
 
         return response
 

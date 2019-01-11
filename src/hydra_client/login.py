@@ -51,7 +51,6 @@ class LoginRequest(AbstractEndpoint):
         )
         url = urljoin(self.url, "accept")
         response = self._request("PUT", url, json=data)
-        # TODO: Catch exceptions and raise custom error
         payload = response.json()
         return payload["redirect_to"]
 
@@ -74,6 +73,5 @@ class LoginRequest(AbstractEndpoint):
             }
         )
         response = self._request("PUT", url, json=data)
-        # TODO: Catch exceptions and raise custom error
         payload = response.json()
         return payload["redirect_to"]
