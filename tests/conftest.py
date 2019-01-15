@@ -76,3 +76,8 @@ def consent_challenge(hydra_admin, betamax_session, login_request):
 @pytest.fixture
 def consent_request(hydra_admin, consent_challenge):
     return hydra_admin.consent_request(consent_challenge)
+
+
+@pytest.fixture
+def oauth2_client(hydra_admin):
+    return hydra_admin.create_client()
