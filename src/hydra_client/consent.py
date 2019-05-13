@@ -26,11 +26,11 @@ class ConsentRequest(AbstractEndpoint):
         self.requested_scope = data["requested_scope"]
         self.skip = data["skip"]
         self.subject = data["subject"]
-        self.url = urljoin(self.url, self.challenge)
+        self.url = urljoin(self.url, query=dict(challenge=self.challenge))
 
     @classmethod
     def get(cls, challenge: str, hydra: Hydra) -> ConsentRequest:
-        url = urljoin(hydra.url, cls.endpoint, challenge)
+        url = urljoin(hydra.url, cls.endpoint, query=dict(challenge=challenge))
         response = hydra._request("GET", url)
         return cls(response.json(), hydra)
 
@@ -51,7 +51,7 @@ class ConsentRequest(AbstractEndpoint):
                 "session": session,
             }
         )
-        url = urljoin(self.url, "accept")
+        url = urljoin(self.url, "accept", query=dict(consent_challenge=self.challenge))
         response = self._request("PUT", url, json=data)
         payload = response.json()
         return payload["redirect_to"]

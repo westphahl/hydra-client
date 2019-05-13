@@ -50,6 +50,7 @@ class AbstractEndpoint(AbstractResource):
         super().__init__(resource)
         self.url = urljoin(self.url, self.endpoint)
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def endpoint(self) -> str:
-        pass
+        raise NotImplementedError

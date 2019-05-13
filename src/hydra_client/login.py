@@ -24,11 +24,11 @@ class LoginRequest(AbstractEndpoint):
         self.session_id = data["session_id"]
         self.skip = data["skip"]
         self.subject = data["subject"]
-        self.url = urljoin(self.url, self.challenge)
+        self.url = urljoin(self.url, query=dict(challenge=self.challenge))
 
     @classmethod
     def get(cls, challenge: str, hydra: Hydra) -> LoginRequest:
-        url = urljoin(hydra.url, cls.endpoint, challenge)
+        url = urljoin(hydra.url, cls.endpoint, query=dict(challenge=challenge))
         response = hydra._request("GET", url)
         return cls(response.json(), hydra)
 
@@ -49,7 +49,7 @@ class LoginRequest(AbstractEndpoint):
                 "subject": subject,
             }
         )
-        url = urljoin(self.url, "accept")
+        url = urljoin(self.url, "accept", query=dict(login_challenge=self.challenge))
         response = self._request("PUT", url, json=data)
         payload = response.json()
         return payload["redirect_to"]
