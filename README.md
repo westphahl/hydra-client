@@ -47,7 +47,7 @@ Run Hydra in a Docker container:
       -it \
       --rm \
       -e "DATABASE_URL=memory" \
-      -e "ISSUER=https://localhost:4444/" \
+      -e "ISSUER=http://localhost:4444/" \
       --name hydra \
       -p 4445:4445 \
       -p 4444:4444 \
