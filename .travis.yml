@@ -1,0 +1,17 @@
+dist: bionic
+language: python
+
+matrix:
+  include:
+    - python: 3.7
+      env: TOXENV=pytest-py37
+    - python: 3.7
+      env: TOXENV=mypy-py37
+    - python: 3.7
+      env: TOXENV=black-py37
+
+install:
+  - pip install tox
+
+script:
+  -  tox
