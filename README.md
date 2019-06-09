@@ -13,8 +13,8 @@ Installation
 pip install hydra-client
 ```
 
-Usage
------
+Basic usage
+-----------
 
 ```python
 from hydra_client import HydraAdmin
@@ -51,7 +51,7 @@ Run Hydra in a Docker container:
       --name hydra \
       -p 4445:4445 \
       -p 4444:4444 \
-      oryd/hydra:v1.0.0-rc.6_oryOS.10 \
+      oryd/hydra:v1.0 \
       serve all --dangerous-force-http
 ```
 
