@@ -4,7 +4,7 @@ def test_login_request_create(hydra_admin, login_challenge):
 
 
 def test_login_request_accept(login_request):
-    redirect = login_request.accept()
+    redirect = login_request.accept("subject")
     assert redirect.startswith("http"), redirect
 
 

@@ -25,7 +25,7 @@ class AbstractResource(abc.ABC):
         self, method: str, url: str, params: dict = None, json: dict = None
     ) -> requests.Response:
         try:
-            response = self.session.request(method, url, json=json)
+            response = self.session.request(method, url, params=params, json=json)
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.Timeout,
