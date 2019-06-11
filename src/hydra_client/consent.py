@@ -18,6 +18,7 @@ class ConsentRequest(AbstractEndpoint):
         self.acr = data["acr"]
         self.challenge = data["challenge"]
         self.client = data["client"]
+        self.context = data.get("context")
         self.login_challenge = data["login_challenge"]
         self.login_session_id = data["login_session_id"]
         self.oidc_context = data["oidc_context"]

@@ -39,6 +39,7 @@ class LoginRequest(AbstractEndpoint):
         self,
         subject: str,
         acr: str = None,
+        context: dict = None,
         force_subject_identifier: str = None,
         remember: bool = False,
         remember_for: int = None,
@@ -46,6 +47,7 @@ class LoginRequest(AbstractEndpoint):
         data = filter_none(
             {
                 "acr": acr,
+                "context": context,
                 "force_subject_identifier": force_subject_identifier,
                 "remember": remember,
                 "remember_for": remember_for,
