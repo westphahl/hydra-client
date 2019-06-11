@@ -24,7 +24,7 @@ def oauth2_session():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "ok"
     client_id = os.environ.get("OAUTH2_CLIENT_ID", "test-client")
     # TODO: Get client config from environ
-    redirect_uri = "http://client.local"
+    redirect_uri = "http://client.localhost"
     oauth = OAuth2Session(
         client_id, redirect_uri=redirect_uri, scope=["openid", "offline"]
     )

@@ -46,8 +46,8 @@ Run Hydra in a Docker container:
    docker run \
       -it \
       --rm \
-      -e "DATABASE_URL=memory" \
-      -e "ISSUER=http://localhost:4444/" \
+      -e "DSN=memory" \
+      -e "URLS_SELF_ISSUER=http://localhost:4444/" \
       --name hydra \
       -p 4445:4445 \
       -p 4444:4444 \
@@ -65,7 +65,7 @@ Create a new OAuth2 client:
        --endpoint http://localhost:4445 \
        --id test-client \
        --secret test-secret \
-       --callbacks http://client.local
+       --callbacks http://client.localhost
 ```
 
 Re-Record Betamax cassettes:
