@@ -3,6 +3,7 @@ import typing
 from .abc import AbstractResource
 from .consent import ConsentRequest
 from .login import LoginRequest
+from .logout import LogoutRequest
 from .oauth2 import OAuth2Client
 from .version import Version
 
@@ -80,6 +81,9 @@ class HydraAdmin(Hydra):
 
     def consent_request(self, challenge: str) -> ConsentRequest:
         return ConsentRequest.get(challenge, self)
+
+    def logout_request(self, challenge: str) -> LogoutRequest:
+        return LogoutRequest.get(challenge, self)
 
     def version(self) -> str:
         return Version.get(self)
