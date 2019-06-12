@@ -1,6 +1,8 @@
 Python client library for ORY Hydra
 ===================================
 
+[![Build Status](https://travis-ci.org/westphahl/hydra-client.svg?branch=master)](https://travis-ci.org/westphahl/hydra-client)
+
 Python wrapper for the [ORY Hydra](https://www.ory.sh/docs/hydra/) OAuth2 and
 OpenID Connect server REST API.
 
