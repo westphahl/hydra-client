@@ -2,7 +2,7 @@ import typing
 
 from .abc import AbstractResource
 from .consent import ConsentRequest, ConsentSession
-from .login import LoginRequest
+from .login import LoginRequest, LoginSession
 from .logout import LogoutRequest
 from .oauth2 import OAuth2Client
 from .version import Version
@@ -102,6 +102,9 @@ class HydraAdmin(Hydra):
 
     def revoke_consent_sessions(self, subject: str, client: str = None) -> None:
         ConsentSession.revoke(subject, client, self)
+
+    def invalidate_login_sessions(self, subject: str) -> None:
+        LoginSession.invalidate(subject, self)
 
     def version(self) -> str:
         return Version.get(self)

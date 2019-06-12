@@ -84,3 +84,18 @@ class LoginRequest(AbstractEndpoint):
         )
         payload = response.json()
         return payload["redirect_to"]
+
+
+class LoginSession(AbstractResource):
+
+    endpoint = "/oauth2/auth/sessions/login"
+
+    @classmethod
+    def params(cls, subject: str) -> dict:
+        return {"subject": subject}
+
+    @classmethod
+    def invalidate(cls, subject: str, hydra: Hydra) -> None:
+        url = urljoin(hydra.url, cls.endpoint)
+        # This returns 204/201 without any content
+        hydra._request("DELETE", url, params=cls.params(subject))
