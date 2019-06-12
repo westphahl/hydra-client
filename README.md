@@ -1,5 +1,5 @@
-Python client for ORY Hydra
-===========================
+Python client library for ORY Hydra
+===================================
 
 Python wrapper for the [ORY Hydra](https://www.ory.sh/docs/hydra/) OAuth2 and
 OpenID Connect server REST API.
