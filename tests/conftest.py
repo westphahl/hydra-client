@@ -56,7 +56,7 @@ def login_challenge(betamax_session, betamax_oauth2_session):
 def hydra_admin(betamax_session):
     # TODO: get admin URL from environ
     hydra_admin = HydraAdmin("http://localhost:4445")
-    hydra_admin.session = betamax_session
+    hydra_admin._session = betamax_session
     return hydra_admin
 
 
@@ -76,6 +76,12 @@ def consent_challenge(hydra_admin, betamax_session, login_request):
 @pytest.fixture
 def consent_request(hydra_admin, consent_challenge):
     return hydra_admin.consent_request(consent_challenge)
+
+
+@pytest.fixture
+def accepted_consent_request(consent_request):
+    consent_request.accept()
+    return consent_request
 
 
 @pytest.fixture

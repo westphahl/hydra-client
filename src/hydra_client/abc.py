@@ -15,17 +15,17 @@ if typing.TYPE_CHECKING:
 class AbstractResource(abc.ABC):
     def __init__(self, resource: AbstractResource = None):
         if resource is not None:
-            self.session: requests.Session = resource.session
+            self._session: requests.Session = resource._session
             self.url: str = resource.url
         else:
-            self.session = requests.Session()
+            self._session = requests.Session()
             self.url = ""
 
     def _request(
         self, method: str, url: str, params: dict = None, json: dict = None
     ) -> requests.Response:
         try:
-            response = self.session.request(method, url, params=params, json=json)
+            response = self._session.request(method, url, params=params, json=json)
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.Timeout,

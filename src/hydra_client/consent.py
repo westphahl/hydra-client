@@ -85,3 +85,35 @@ class ConsentRequest(AbstractEndpoint):
         )
         payload = response.json()
         return payload["redirect_to"]
+
+
+class ConsentSession(AbstractResource):
+
+    endpoint = "/oauth2/auth/sessions/consent"
+
+    def __init__(self, data: dict, parent: AbstractResource):
+        super().__init__(parent)
+        self.consent_request = ConsentRequest(data["consent_request"], parent)
+        self.grant_access_token_audience = data["grant_access_token_audience"]
+        self.grant_scope = data["grant_scope"]
+        self.remember = data["remember"]
+        self.remember_for = data["remember_for"]
+        self.session = data.get("session")
+
+    @classmethod
+    def params(cls, subject: str, client: str = None) -> dict:
+        return filter_none({"subject": subject, "client": client})
+
+    @classmethod
+    def list(cls, subject: str, hydra: Hydra) -> typing.Iterator[ConsentSession]:
+        url = urljoin(hydra.url, cls.endpoint)
+        response = hydra._request("GET", url, params=cls.params(subject))
+        session_list = response.json()
+        for consent_session in session_list:
+            yield ConsentSession(consent_session, hydra)
+
+    @classmethod
+    def revoke(cls, subject: str, client: typing.Optional[str], hydra: Hydra) -> None:
+        url = urljoin(hydra.url, cls.endpoint)
+        # This returns 204/201 without any content
+        hydra._request("DELETE", url, params=cls.params(subject, client))
