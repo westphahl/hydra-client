@@ -1,7 +1,7 @@
 import typing
 
 from .abc import AbstractResource
-from .consent import ConsentRequest
+from .consent import ConsentRequest, ConsentSession
 from .login import LoginRequest
 from .logout import LogoutRequest
 from .oauth2 import OAuth2Client
@@ -96,6 +96,12 @@ class HydraAdmin(Hydra):
 
     def logout_request(self, challenge: str) -> LogoutRequest:
         return LogoutRequest.get(challenge, self)
+
+    def consent_sessions(self, subject: str) -> typing.Iterator[ConsentSession]:
+        yield from ConsentSession.list(subject, self)
+
+    def revoke_consent_sessions(self, subject: str, client: str = None) -> None:
+        ConsentSession.revoke(subject, client, self)
 
     def version(self) -> str:
         return Version.get(self)

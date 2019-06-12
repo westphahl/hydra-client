@@ -79,6 +79,12 @@ def consent_request(hydra_admin, consent_challenge):
 
 
 @pytest.fixture
+def accepted_consent_request(consent_request):
+    consent_request.accept()
+    return consent_request
+
+
+@pytest.fixture
 def logout_challenge(
     betamax_session, betamax_oauth2_session, consent_request, hydra_admin
 ):
