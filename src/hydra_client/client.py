@@ -3,6 +3,7 @@ import typing
 from .abc import AbstractResource
 from .consent import ConsentRequest
 from .login import LoginRequest
+from .logout import LogoutRequest
 from .oauth2 import OAuth2Client
 from .version import Version
 
@@ -26,17 +27,23 @@ class HydraAdmin(Hydra):
         self,
         allowed_cors_origins: typing.List[str] = None,
         audience: typing.List[str] = None,
+        backchannel_logout_session_required: bool = None,
+        backchannel_logout_uri: str = None,
         client_id: str = None,
         client_name: str = None,
         client_secret: str = None,
         client_secret_expires_at: int = None,
         client_uri: str = None,
         contacts: typing.List[str] = None,
+        frontchannel_logout_session_required: bool = None,
+        frontchannel_logout_uri: str = None,
         grant_types: typing.List[str] = None,
         jwks: dict = None,
         jwks_uri: str = None,
         logo_uri: str = None,
+        owner: str = None,
         policy_uri: str = None,
+        post_logout_redirect_uris: typing.List[str] = None,
         redirect_uris: typing.List[str] = None,
         redirect_object_signing_alg: str = None,
         request_uris: typing.List[str] = None,
@@ -52,17 +59,23 @@ class HydraAdmin(Hydra):
             self,
             allowed_cors_origins,
             audience,
+            backchannel_logout_session_required,
+            backchannel_logout_uri,
             client_id,
             client_name,
             client_secret,
             client_secret_expires_at,
             client_uri,
             contacts,
+            frontchannel_logout_session_required,
+            frontchannel_logout_uri,
             grant_types,
             jwks,
             jwks_uri,
             logo_uri,
+            owner,
             policy_uri,
+            post_logout_redirect_uris,
             redirect_uris,
             redirect_object_signing_alg,
             request_uris,
@@ -80,6 +93,9 @@ class HydraAdmin(Hydra):
 
     def consent_request(self, challenge: str) -> ConsentRequest:
         return ConsentRequest.get(challenge, self)
+
+    def logout_request(self, challenge: str) -> LogoutRequest:
+        return LogoutRequest.get(challenge, self)
 
     def version(self) -> str:
         return Version.get(self)

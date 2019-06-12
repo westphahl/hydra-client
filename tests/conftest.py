@@ -24,7 +24,7 @@ def oauth2_session():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "ok"
     client_id = os.environ.get("OAUTH2_CLIENT_ID", "test-client")
     # TODO: Get client config from environ
-    redirect_uri = "http://client.local"
+    redirect_uri = "http://client.localhost"
     oauth = OAuth2Session(
         client_id, redirect_uri=redirect_uri, scope=["openid", "offline"]
     )
@@ -67,7 +67,7 @@ def login_request(hydra_admin, login_challenge):
 
 @pytest.fixture
 def consent_challenge(hydra_admin, betamax_session, login_request):
-    redirect = login_request.accept(subject="foobar")
+    redirect = login_request.accept(subject="foobar", remember=True)
     response = betamax_session.get(redirect, allow_redirects=False)
     params = parse_qs(urlsplit(response.headers["Location"]).query)
     return params["consent_challenge"][0]
@@ -76,6 +76,26 @@ def consent_challenge(hydra_admin, betamax_session, login_request):
 @pytest.fixture
 def consent_request(hydra_admin, consent_challenge):
     return hydra_admin.consent_request(consent_challenge)
+
+
+@pytest.fixture
+def logout_challenge(
+    betamax_session, betamax_oauth2_session, consent_request, hydra_admin
+):
+    redirect = consent_request.accept(
+        grant_access_token_audience=consent_request.requested_access_token_audience,
+        grant_scope=consent_request.requested_scope,
+    )
+    response = betamax_session.get(redirect, allow_redirects=False)
+    url = "http://localhost:4444/oauth2/sessions/logout"
+    response = betamax_session.get(url, allow_redirects=False)
+    params = parse_qs(urlsplit(response.headers["Location"]).query)
+    return params["logout_challenge"][0]
+
+
+@pytest.fixture
+def logout_request(hydra_admin, logout_challenge):
+    return hydra_admin.logout_request(logout_challenge)
 
 
 @pytest.fixture

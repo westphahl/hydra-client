@@ -9,50 +9,49 @@ if typing.TYPE_CHECKING:
     from .client import Hydra
 
 
-class ConsentRequest(AbstractEndpoint):
+class LogoutRequest(AbstractEndpoint):
 
-    endpoint = "/oauth2/auth/requests/consent"
+    endpoint = "/oauth2/auth/requests/logout"
 
     def __init__(self, data: dict, parent: AbstractResource):
         super().__init__(parent)
-        self.acr = data["acr"]
-        self.challenge = data["challenge"]
-        self.client = data["client"]
-        self.context = data.get("context")
-        self.login_challenge = data["login_challenge"]
-        self.login_session_id = data["login_session_id"]
-        self.oidc_context = data["oidc_context"]
+        self.challenge = data["_challenge"]
         self.request_url = data["request_url"]
-        self.requested_access_token_audience = data["requested_access_token_audience"]
-        self.requested_scope = data["requested_scope"]
-        self.skip = data["skip"]
+        self.rp_initiated = data["rp_initiated"]
+        self.sid = data["sid"]
         self.subject = data["subject"]
 
     @classmethod
     def params(cls, challenge: str) -> dict:
-        return {"consent_challenge": challenge}
+        return {"logout_challenge": challenge}
 
     @classmethod
-    def get(cls, challenge: str, hydra: Hydra) -> ConsentRequest:
+    def get(cls, challenge: str, hydra: Hydra) -> LogoutRequest:
         url = urljoin(hydra.url, cls.endpoint)
-        response = hydra._request("GET", url, params=cls.params(challenge))
-        return cls(response.json(), hydra)
+        response = hydra._request("GET", url, cls.params(challenge))
+        # NOTE: we have to inject the challenge here since the endpoint doesn't
+        # return it as it's the case for login/consent.
+        data = response.json()
+        data["_challenge"] = challenge
+        return cls(data, hydra)
 
     def accept(
         self,
-        grant_access_token_audience: typing.Iterable[str] = None,
-        grant_scope: typing.Iterable[str] = None,
+        subject: str,
+        acr: str = None,
+        context: dict = None,
+        force_subject_identifier: str = None,
         remember: bool = False,
         remember_for: int = None,
-        session: dict = None,
     ) -> str:
         data = filter_none(
             {
-                "grant_access_token_audience": grant_access_token_audience,
-                "grant_scope": grant_scope,
+                "acr": acr,
+                "context": context,
+                "force_subject_identifier": force_subject_identifier,
                 "remember": remember,
                 "remember_for": remember_for,
-                "session": session,
+                "subject": subject,
             }
         )
         url = urljoin(self.url, "accept")
@@ -69,7 +68,7 @@ class ConsentRequest(AbstractEndpoint):
         error_description: str = None,
         error_hint: str = None,
         status_code: int = None,
-    ) -> str:
+    ) -> None:
         url = urljoin(self.url, "reject")
         data = filter_none(
             {
@@ -80,8 +79,5 @@ class ConsentRequest(AbstractEndpoint):
                 "status_code": status_code,
             }
         )
-        response = self._request(
-            "PUT", url, params=self.params(self.challenge), json=data
-        )
-        payload = response.json()
-        return payload["redirect_to"]
+        # This returns 204/201 without any content
+        self._request("PUT", url, params=self.params(self.challenge), json=data)

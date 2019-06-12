@@ -21,17 +21,27 @@ class OAuth2Client(AbstractEndpoint):
     def _update(self, data: dict):
         self.allowed_cors_origins = data["allowed_cors_origins"]
         self.audience = data["audience"]
+        self.backchannel_logout_session_required = data.get(
+            "backchannel_logout_session_required"
+        )
+        self.backchannel_logout_uri = data.get("backchannel_logout_uri")
         self.client_id = data["client_id"]
         self.client_name = data["client_name"]
         self.client_secret = data.get("client_secret")
+        self.client_secret_expires_at = data["client_secret_expires_at"]
         self.client_uri = data["client_uri"]
         self.contacts = data["contacts"]
+        self.frontchannel_logout_session_required = data.get(
+            "frontchannel_logout_session_required"
+        )
+        self.frontchannel_logout_uri = data.get("frontchannel_logout_uri")
         self.grant_types = data["grant_types"]
         self.jwks = data.get("jwks")
         self.jwks_uri = data.get("jwks_uri", [])
         self.logo_uri = data["logo_uri"]
         self.owner = data["owner"]
         self.policy_uri = data["policy_uri"]
+        self.post_logout_redirect_uris = data.get("post_logout_redirect_uris")
         self.redirect_uris = data["redirect_uris"]
         self.request_object_signing_alg = data.get("request_object_signing_alg")
         self.request_uris = data.get("request_uris", [])
@@ -41,6 +51,7 @@ class OAuth2Client(AbstractEndpoint):
         self.subject_type = data["subject_type"]
         self.token_endpoint_auth_method = data["token_endpoint_auth_method"]
         self.tos_uri = data["tos_uri"]
+        self.updated_at = data["updated_at"]
         self.userinfo_signed_response_alg = data["userinfo_signed_response_alg"]
 
     @classmethod
@@ -59,17 +70,23 @@ class OAuth2Client(AbstractEndpoint):
         hydra: Hydra,
         allowed_cors_origins: typing.List[str] = None,
         audience: typing.List[str] = None,
+        backchannel_logout_session_required: bool = None,
+        backchannel_logout_uri: str = None,
         client_id: str = None,
         client_name: str = None,
         client_secret: str = None,
         client_secret_expires_at: int = None,
         client_uri: str = None,
         contacts: typing.List[str] = None,
+        frontchannel_logout_session_required: bool = None,
+        frontchannel_logout_uri: str = None,
         grant_types: typing.List[str] = None,
         jwks: dict = None,
         jwks_uri: str = None,
         logo_uri: str = None,
+        owner: str = None,
         policy_uri: str = None,
+        post_logout_redirect_uris: typing.List[str] = None,
         redirect_uris: typing.List[str] = None,
         redirect_object_signing_alg: str = None,
         request_uris: typing.List[str] = None,
@@ -86,17 +103,23 @@ class OAuth2Client(AbstractEndpoint):
             {
                 "allowed_cors_origins": allowed_cors_origins,
                 "audience": audience,
+                "backchannel_logout_session_required": backchannel_logout_session_required,
+                "backchannel_logout_uri": backchannel_logout_uri,
                 "client_id": client_id,
                 "client_name": client_name,
                 "client_secret": client_secret,
                 "client_secret_expires_at": client_secret_expires_at,
                 "client_uri": client_uri,
                 "contacts": contacts,
+                "frontchannel_logout_session_required": frontchannel_logout_session_required,
+                "frontchannel_logout_uri": frontchannel_logout_uri,
                 "grant_types": grant_types,
                 "jwks": jwks,
                 "jwks_uri": jwks_uri,
                 "logo_uri": logo_uri,
+                "owner": owner,
                 "policy_uri": policy_uri,
+                "post_logout_redirect_uris": post_logout_redirect_uris,
                 "redirect_uris": redirect_uris,
                 "redirect_object_signing_alg": redirect_object_signing_alg,
                 "request_uris": request_uris,
@@ -122,17 +145,23 @@ class OAuth2Client(AbstractEndpoint):
         self,
         allowed_cors_origins: typing.List[str] = None,
         audience: typing.List[str] = None,
+        backchannel_logout_session_required: bool = None,
+        backchannel_logout_uri: str = None,
         client_id: str = None,
         client_name: str = None,
         client_secret: str = None,
         client_secret_expires_at: int = None,
         client_uri: str = None,
         contacts: typing.List[str] = None,
+        frontchannel_logout_session_required: bool = None,
+        frontchannel_logout_uri: str = None,
         grant_types: typing.List[str] = None,
         jwks: dict = None,
         jwks_uri: str = None,
         logo_uri: str = None,
+        owner: str = None,
         policy_uri: str = None,
+        post_logout_redirect_uris: typing.List[str] = None,
         redirect_uris: typing.List[str] = None,
         redirect_object_signing_alg: str = None,
         request_uris: typing.List[str] = None,
@@ -148,17 +177,23 @@ class OAuth2Client(AbstractEndpoint):
             {
                 "allowed_cors_origins": allowed_cors_origins,
                 "audience": audience,
+                "backchannel_logout_session_required": backchannel_logout_session_required,
+                "backchannel_logout_uri": backchannel_logout_uri,
                 "client_id": client_id,
                 "client_name": client_name,
                 "client_secret": client_secret,
                 "client_secret_expires_at": client_secret_expires_at,
                 "client_uri": client_uri,
                 "contacts": contacts,
+                "frontchannel_logout_session_required": frontchannel_logout_session_required,
+                "frontchannel_logout_uri": frontchannel_logout_uri,
                 "grant_types": grant_types,
                 "jwks": jwks,
                 "jwks_uri": jwks_uri,
                 "logo_uri": logo_uri,
+                "owner": owner,
                 "policy_uri": policy_uri,
+                "post_logout_redirect_uris": post_logout_redirect_uris,
                 "redirect_uris": redirect_uris,
                 "redirect_object_signing_alg": redirect_object_signing_alg,
                 "request_uris": request_uris,
