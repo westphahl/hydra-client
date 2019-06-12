@@ -56,7 +56,7 @@ def login_challenge(betamax_session, betamax_oauth2_session):
 def hydra_admin(betamax_session):
     # TODO: get admin URL from environ
     hydra_admin = HydraAdmin("http://localhost:4445")
-    hydra_admin.session = betamax_session
+    hydra_admin._session = betamax_session
     return hydra_admin
 
 
