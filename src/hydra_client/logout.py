@@ -2,38 +2,41 @@ from __future__ import annotations
 
 import typing
 
-from .abc import AbstractEndpoint, AbstractResource
+import attr
+
+from .model import Entity, Resource
 from .utils import filter_none, urljoin
 
 if typing.TYPE_CHECKING:
-    from .client import Hydra
+    from .api import HydraAdmin
 
 
-class LogoutRequest(AbstractEndpoint):
+@attr.s(auto_attribs=True, kw_only=True)
+class LogoutRequest(Resource):
+    challenge: str
+    request_url: str
+    rp_initiated: bool
+    sid: str
+    subject: str
 
-    endpoint = "/oauth2/auth/requests/logout"
+    url_ = "/oauth2/auth/requests/logout"
 
-    def __init__(self, data: dict, parent: AbstractResource):
-        super().__init__(parent)
-        self.challenge = data["_challenge"]
-        self.request_url = data["request_url"]
-        self.rp_initiated = data["rp_initiated"]
-        self.sid = data["sid"]
-        self.subject = data["subject"]
+    def _post_bind(self):
+        self.url_ = urljoin(self.parent_.url_, self.url_)
 
     @classmethod
-    def params(cls, challenge: str) -> dict:
+    def _params(cls, challenge: str) -> dict:
         return {"logout_challenge": challenge}
 
     @classmethod
-    def get(cls, challenge: str, hydra: Hydra) -> LogoutRequest:
-        url = urljoin(hydra.url, cls.endpoint)
-        response = hydra._request("GET", url, cls.params(challenge))
+    def _get(cls, api: HydraAdmin, challenge: str) -> LogoutRequest:
+        url = urljoin(api.url_, cls.url_)
+        response = api._request("GET", url, cls._params(challenge))
         # NOTE: we have to inject the challenge here since the endpoint doesn't
         # return it as it's the case for login/consent.
         data = response.json()
-        data["_challenge"] = challenge
-        return cls(data, hydra)
+        data["challenge"] = challenge
+        return cls._from_dict(data, parent=api)
 
     def accept(
         self,
@@ -54,9 +57,9 @@ class LogoutRequest(AbstractEndpoint):
                 "subject": subject,
             }
         )
-        url = urljoin(self.url, "accept")
+        url = urljoin(self.url_, "accept")
         response = self._request(
-            "PUT", url, params=self.params(self.challenge), json=data
+            "PUT", url, params=self._params(self.challenge), json=data
         )
         payload = response.json()
         return payload["redirect_to"]
@@ -69,7 +72,7 @@ class LogoutRequest(AbstractEndpoint):
         error_hint: str = None,
         status_code: int = None,
     ) -> None:
-        url = urljoin(self.url, "reject")
+        url = urljoin(self.url_, "reject")
         data = filter_none(
             {
                 "error": error,
@@ -80,4 +83,4 @@ class LogoutRequest(AbstractEndpoint):
             }
         )
         # This returns 204/201 without any content
-        self._request("PUT", url, params=self.params(self.challenge), json=data)
+        self._request("PUT", url, params=self._params(self.challenge), json=data)

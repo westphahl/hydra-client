@@ -1,6 +1,8 @@
 import typing
 
-from .abc import AbstractResource
+import requests
+
+from .model import Resource
 from .consent import ConsentRequest, ConsentSession
 from .login import LoginRequest, LoginSession
 from .logout import LogoutRequest
@@ -8,20 +10,18 @@ from .oauth2 import OAuth2Client
 from .version import Version
 
 
-class Hydra(AbstractResource):
-    def __init__(self, url: str):
-        super().__init__()
-        self.url = url
+class HydraAdmin(Resource):
+    def __init__(self, url: str, session: requests.Session = None):
+        self.url_ = url
+        self.session_ = session or requests.Session()
 
-
-class HydraAdmin(Hydra):
     def clients(
         self, limit: int = None, offset: int = None
     ) -> typing.List[OAuth2Client]:
-        return OAuth2Client.list(self, limit, offset)
+        return OAuth2Client._list(self, limit, offset)
 
     def client(self, id: str) -> OAuth2Client:
-        return OAuth2Client.get(id, self)
+        return OAuth2Client._get(self, id)
 
     def create_client(
         self,
@@ -89,22 +89,22 @@ class HydraAdmin(Hydra):
         )
 
     def login_request(self, challenge: str) -> LoginRequest:
-        return LoginRequest.get(challenge, self)
+        return LoginRequest._get(self, challenge)
 
     def consent_request(self, challenge: str) -> ConsentRequest:
-        return ConsentRequest.get(challenge, self)
+        return ConsentRequest._get(self, challenge)
 
     def logout_request(self, challenge: str) -> LogoutRequest:
-        return LogoutRequest.get(challenge, self)
+        return LogoutRequest._get(self, challenge)
 
     def consent_sessions(self, subject: str) -> typing.Iterator[ConsentSession]:
-        yield from ConsentSession.list(subject, self)
+        yield from ConsentSession._list(self, subject)
 
     def revoke_consent_sessions(self, subject: str, client: str = None) -> None:
-        ConsentSession.revoke(subject, client, self)
+        ConsentSession._revoke(self, subject, client)
 
     def invalidate_login_sessions(self, subject: str) -> None:
-        LoginSession.invalidate(subject, self)
+        LoginSession._invalidate_all(self, subject)
 
     def version(self) -> str:
-        return Version.get(self)
+        return Version._get(self)

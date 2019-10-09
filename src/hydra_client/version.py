@@ -2,23 +2,24 @@ from __future__ import annotations
 
 import typing
 
-import requests
+import attr
 
 from . import exceptions
-from .abc import AbstractEndpoint
+from .model import Resource
 from .utils import urljoin
 
 if typing.TYPE_CHECKING:
-    from .client import Hydra
+    from .api import HydraAdmin
 
 
-class Version(AbstractEndpoint):
+@attr.s(auto_attribs=True, kw_only=True)
+class Version(Resource):
 
-    endpoint = "/version"
+    url_ = "/version"
 
     @classmethod
-    def get(cls, hydra: Hydra) -> str:
-        url = urljoin(hydra.url, cls.endpoint)
-        response = hydra._request("GET", url)
+    def _get(cls, api: HydraAdmin) -> str:
+        url = urljoin(api.url_, cls.url_)
+        response = api._request("GET", url)
         payload = response.json()
         return payload["version"]

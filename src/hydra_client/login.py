@@ -2,38 +2,42 @@ from __future__ import annotations
 
 import typing
 
-from .abc import AbstractEndpoint, AbstractResource
+import attr
+
+from .common import OpenIDConnectContext
+from .model import Resource
+from .oauth2 import OAuth2Client
 from .utils import filter_none, urljoin
 
 if typing.TYPE_CHECKING:
-    from .client import Hydra
+    from .api import HydraAdmin
 
 
-class LoginRequest(AbstractEndpoint):
+@attr.s(auto_attribs=True, kw_only=True)
+class LoginRequest(Resource):
+    challenge: str
+    client: OAuth2Client
+    oidc_context: OpenIDConnectContext
+    request_url: str
+    requested_access_token_audience: typing.List[str]
+    requested_scope: typing.List[str]
+    session_id: str
+    skip: bool
+    subject: str
+    url_ = "/oauth2/auth/requests/login"
 
-    endpoint = "/oauth2/auth/requests/login"
-
-    def __init__(self, data: dict, parent: AbstractResource):
-        super().__init__(parent)
-        self.challenge = data["challenge"]
-        self.client = data["client"]
-        self.oidc_context = data["oidc_context"]
-        self.request_url = data["request_url"]
-        self.requested_access_token_audience = data["requested_access_token_audience"]
-        self.requested_scope = data["requested_scope"]
-        self.session_id = data["session_id"]
-        self.skip = data["skip"]
-        self.subject = data["subject"]
+    def _post_bind(self):
+        self.url_ = urljoin(self.parent_.url_, self.url_)
 
     @classmethod
-    def params(cls, challenge: str) -> dict:
+    def _params(cls, challenge: str) -> dict:
         return {"login_challenge": challenge}
 
     @classmethod
-    def get(cls, challenge: str, hydra: Hydra) -> LoginRequest:
-        url = urljoin(hydra.url, cls.endpoint)
-        response = hydra._request("GET", url, cls.params(challenge))
-        return cls(response.json(), hydra)
+    def _get(cls, api: HydraAdmin, challenge: str) -> LoginRequest:
+        url = urljoin(api.url_, cls.url_)
+        response = api._request("GET", url, cls._params(challenge))
+        return cls._from_dict(response.json(), parent=api)
 
     def accept(
         self,
@@ -54,9 +58,9 @@ class LoginRequest(AbstractEndpoint):
                 "subject": subject,
             }
         )
-        url = urljoin(self.url, "accept")
+        url = urljoin(self.url_, "accept")
         response = self._request(
-            "PUT", url, params=self.params(self.challenge), json=data
+            "PUT", url, params=self._params(self.challenge), json=data
         )
         payload = response.json()
         return payload["redirect_to"]
@@ -69,7 +73,7 @@ class LoginRequest(AbstractEndpoint):
         error_hint: str = None,
         status_code: int = None,
     ) -> str:
-        url = urljoin(self.url, "reject")
+        url = urljoin(self.url_, "reject")
         data = filter_none(
             {
                 "error": error,
@@ -80,22 +84,26 @@ class LoginRequest(AbstractEndpoint):
             }
         )
         response = self._request(
-            "PUT", url, params=self.params(self.challenge), json=data
+            "PUT", url, params=self._params(self.challenge), json=data
         )
         payload = response.json()
         return payload["redirect_to"]
 
 
-class LoginSession(AbstractResource):
+@attr.s(auto_attribs=True, kw_only=True)
+class LoginSession(Resource):
 
-    endpoint = "/oauth2/auth/sessions/login"
+    url_ = "/oauth2/auth/sessions/login"
+
+    def _post_bind(self):
+        self.url_ = urljoin(self.parent_.url_, self.url_)
 
     @classmethod
-    def params(cls, subject: str) -> dict:
+    def _params(cls, subject: str) -> dict:
         return {"subject": subject}
 
     @classmethod
-    def invalidate(cls, subject: str, hydra: Hydra) -> None:
-        url = urljoin(hydra.url, cls.endpoint)
+    def _invalidate_all(cls, api: HydraAdmin, subject: str) -> None:
+        url = urljoin(api.url_, cls.url_)
         # This returns 204/201 without any content
-        hydra._request("DELETE", url, params=cls.params(subject))
+        api._request("DELETE", url, params=cls._params(subject))

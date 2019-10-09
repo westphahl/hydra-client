@@ -2,41 +2,47 @@ from __future__ import annotations
 
 import typing
 
-from .abc import AbstractEndpoint, AbstractResource
+import attr
+
+from .common import OpenIDConnectContext
+from .model import Entity, Resource
+from .oauth2 import OAuth2Client
 from .utils import filter_none, urljoin
 
 if typing.TYPE_CHECKING:
-    from .client import Hydra
+    from .api import HydraAdmin
 
 
-class ConsentRequest(AbstractEndpoint):
+@attr.s(auto_attribs=True, kw_only=True)
+class ConsentRequest(Resource):
+    acr: str
+    challenge: str
+    client: OAuth2Client
+    context: dict = attr.ib(factory=dict)
+    login_challenge: str
+    login_session_id: str
+    oidc_context = OpenIDConnectContext
+    request_url: str
+    requested_access_token_audience: typing.List[str]
+    requested_scope: typing.List[str]
+    skip: bool
+    subject: str
 
-    endpoint = "/oauth2/auth/requests/consent"
+    url_ = "/oauth2/auth/requests/consent"
 
-    def __init__(self, data: dict, parent: AbstractResource):
-        super().__init__(parent)
-        self.acr = data["acr"]
-        self.challenge = data["challenge"]
-        self.client = data["client"]
-        self.context = data.get("context")
-        self.login_challenge = data["login_challenge"]
-        self.login_session_id = data["login_session_id"]
-        self.oidc_context = data["oidc_context"]
-        self.request_url = data["request_url"]
-        self.requested_access_token_audience = data["requested_access_token_audience"]
-        self.requested_scope = data["requested_scope"]
-        self.skip = data["skip"]
-        self.subject = data["subject"]
+    def _post_bind(self) -> None:
+        self.url_ = urljoin(self.parent_.url_, self.url_)
 
     @classmethod
-    def params(cls, challenge: str) -> dict:
+    def _params(cls, challenge: str) -> dict:
         return {"consent_challenge": challenge}
 
     @classmethod
-    def get(cls, challenge: str, hydra: Hydra) -> ConsentRequest:
-        url = urljoin(hydra.url, cls.endpoint)
-        response = hydra._request("GET", url, params=cls.params(challenge))
-        return cls(response.json(), hydra)
+    def _get(cls, api: HydraAdmin, challenge: str) -> ConsentRequest:
+        url = urljoin(api.url_, cls.url_)
+        response = api._request("GET", url, params=cls._params(challenge))
+        payload = response.json()
+        return cls._from_dict(payload, parent=api)
 
     def accept(
         self,
@@ -55,9 +61,9 @@ class ConsentRequest(AbstractEndpoint):
                 "session": session,
             }
         )
-        url = urljoin(self.url, "accept")
+        url = urljoin(self.url_, "accept")
         response = self._request(
-            "PUT", url, params=self.params(self.challenge), json=data
+            "PUT", url, params=self._params(self.challenge), json=data
         )
         payload = response.json()
         return payload["redirect_to"]
@@ -70,7 +76,7 @@ class ConsentRequest(AbstractEndpoint):
         error_hint: str = None,
         status_code: int = None,
     ) -> str:
-        url = urljoin(self.url, "reject")
+        url = urljoin(self.url_, "reject")
         data = filter_none(
             {
                 "error": error,
@@ -81,39 +87,45 @@ class ConsentRequest(AbstractEndpoint):
             }
         )
         response = self._request(
-            "PUT", url, params=self.params(self.challenge), json=data
+            "PUT", url, params=self._params(self.challenge), json=data
         )
         payload = response.json()
         return payload["redirect_to"]
 
 
-class ConsentSession(AbstractResource):
+@attr.s(auto_attribs=True, kw_only=True)
+class ConsentRequestSession(Entity):
+    access_token: dict
+    id_token: dict
 
-    endpoint = "/oauth2/auth/sessions/consent"
 
-    def __init__(self, data: dict, parent: AbstractResource):
-        super().__init__(parent)
-        self.consent_request = ConsentRequest(data["consent_request"], parent)
-        self.grant_access_token_audience = data["grant_access_token_audience"]
-        self.grant_scope = data["grant_scope"]
-        self.remember = data["remember"]
-        self.remember_for = data["remember_for"]
-        self.session = data.get("session")
+@attr.s(auto_attribs=True, kw_only=True)
+class ConsentSession(Resource):
+    consent_request: ConsentRequest
+    grant_access_token_audience: typing.List[str]
+    grant_scope: typing.List[str]
+    remember: bool
+    remember_for: int
+    session: ConsentRequestSession
+
+    url_ = "/oauth2/auth/sessions/consent"
 
     @classmethod
-    def params(cls, subject: str, client: str = None) -> dict:
+    def _params(cls, subject: str, client: str = None) -> dict:
         return filter_none({"subject": subject, "client": client})
 
     @classmethod
-    def list(cls, subject: str, hydra: Hydra) -> typing.Iterator[ConsentSession]:
-        url = urljoin(hydra.url, cls.endpoint)
-        response = hydra._request("GET", url, params=cls.params(subject))
+    def _list(cls, api: HydraAdmin, subject: str) -> typing.Iterator[ConsentSession]:
+        url = urljoin(api.url_, cls.url_)
+        response = api._request("GET", url, params=cls._params(subject))
         session_list = response.json()
         for consent_session in session_list:
-            yield ConsentSession(consent_session, hydra)
+            yield ConsentSession._from_dict(consent_session, parent=api)
 
     @classmethod
-    def revoke(cls, subject: str, client: typing.Optional[str], hydra: Hydra) -> None:
-        url = urljoin(hydra.url, cls.endpoint)
+    def _revoke(
+        cls, api: HydraAdmin, subject: str, client: typing.Optional[str]
+    ) -> None:
+        url = urljoin(api.url_, cls.url_)
         # This returns 204/201 without any content
-        hydra._request("DELETE", url, params=cls.params(subject, client))
+        api._request("DELETE", url, params=cls._params(subject, client))

@@ -55,9 +55,7 @@ def login_challenge(betamax_session, betamax_oauth2_session):
 @pytest.fixture
 def hydra_admin(betamax_session):
     # TODO: get admin URL from environ
-    hydra_admin = HydraAdmin("http://localhost:4445")
-    hydra_admin._session = betamax_session
-    return hydra_admin
+    return HydraAdmin("http://localhost:4445", session=betamax_session)
 
 
 @pytest.fixture
