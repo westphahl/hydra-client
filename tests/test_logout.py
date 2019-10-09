@@ -9,5 +9,5 @@ def test_logout_request_accept(logout_request):
 
 
 def test_logout_request_reject(logout_request):
-    # Only making sure this is returnin a 2xx status code
+    # Only making sure this is not throwing any exceptions
     logout_request.reject()

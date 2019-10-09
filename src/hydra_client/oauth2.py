@@ -1,73 +1,98 @@
 from __future__ import annotations
 
+from datetime import datetime
 import typing
 
-from .abc import AbstractEndpoint, AbstractResource
+import attr
+import dateutil.parser
+
+from .model import Entity, Resource
 from .utils import filter_none, urljoin
 
 if typing.TYPE_CHECKING:
-    from .client import Hydra
+    from .api import HydraAdmin
 
 
-class OAuth2Client(AbstractEndpoint):
+@attr.s(auto_attribs=True, kw_only=True)
+class JSONWebKey(Entity):
+    alg: str
+    crv: str
+    d: str
+    dp: str
+    dq: str
+    e: str
+    k: str
+    kid: str
+    kty: str
+    n: str
+    p: str
+    q: str
+    qi: str
+    use: str
+    x: str
+    x5c: str
+    y: str
 
-    endpoint = "/clients"
 
-    def __init__(self, data: dict, parent: AbstractResource):
-        super().__init__(parent)
-        self._update(data)
-        self.url = urljoin(self.url, self.client_id)
+@attr.s(auto_attribs=True, kw_only=True)
+class JSONWebKeySet(Entity):
+    keys = typing.List[JSONWebKey]
 
-    def _update(self, data: dict):
-        self.allowed_cors_origins = data["allowed_cors_origins"]
-        self.audience = data["audience"]
-        self.backchannel_logout_session_required = data.get(
-            "backchannel_logout_session_required"
-        )
-        self.backchannel_logout_uri = data.get("backchannel_logout_uri")
-        self.client_id = data["client_id"]
-        self.client_name = data["client_name"]
-        self.client_secret = data.get("client_secret")
-        self.client_secret_expires_at = data["client_secret_expires_at"]
-        self.client_uri = data["client_uri"]
-        self.contacts = data["contacts"]
-        self.frontchannel_logout_session_required = data.get(
-            "frontchannel_logout_session_required"
-        )
-        self.frontchannel_logout_uri = data.get("frontchannel_logout_uri")
-        self.grant_types = data["grant_types"]
-        self.jwks = data.get("jwks")
-        self.jwks_uri = data.get("jwks_uri", [])
-        self.logo_uri = data["logo_uri"]
-        self.owner = data["owner"]
-        self.policy_uri = data["policy_uri"]
-        self.post_logout_redirect_uris = data.get("post_logout_redirect_uris")
-        self.redirect_uris = data["redirect_uris"]
-        self.request_object_signing_alg = data.get("request_object_signing_alg")
-        self.request_uris = data.get("request_uris", [])
-        self.response_types = data["response_types"]
-        self.scope = data["scope"]
-        self.sector_identifier_uri = data.get("sector_identifier_uri")
-        self.subject_type = data["subject_type"]
-        self.token_endpoint_auth_method = data["token_endpoint_auth_method"]
-        self.tos_uri = data["tos_uri"]
-        self.updated_at = data["updated_at"]
-        self.userinfo_signed_response_alg = data["userinfo_signed_response_alg"]
+
+@attr.s(auto_attribs=True, kw_only=True)
+class OAuth2Client(Resource):
+    allowed_cors_origins: typing.List[str]
+    audience: typing.List[str]
+    backchannel_logout_session_required: bool = False
+    backchannel_logout_uri: str = ""
+    client_id: str
+    client_name: str
+    client_secret: typing.Optional[str] = None
+    client_secret_expires_at: datetime = attr.ib(
+        converter=datetime.fromtimestamp  # type: ignore
+    )
+    client_uri: str
+    contacts: typing.List[str]
+    frontchannel_logout_session_required: bool = False
+    frontchannel_logout_uri: str = ""
+    grant_types: typing.List[str]
+    jwks: typing.Optional[JSONWebKeySet] = None
+    jwks_uri: str = ""
+    logo_uri: str
+    owner: str
+    policy_uri: str
+    post_logout_redirect_uris: typing.List[str] = attr.ib(factory=list)
+    redirect_uris: typing.List[str] = attr.ib(factory=list)
+    request_object_signing_alg: typing.Optional[str] = None
+    request_uris: typing.List[str] = attr.ib(factory=list)
+    response_types: typing.List[str]
+    scope: str
+    sector_identifier_uri: typing.Optional[str] = None
+    subject_type: str
+    token_endpoint_auth_method: str
+    tos_uri: str
+    updated_at: datetime = attr.ib(converter=dateutil.parser.parse)
+    userinfo_signed_response_alg: str
+
+    url_ = "/clients"
+
+    def _post_bind(self):
+        self.url_ = urljoin(self.parent_.url_, self.url_, self.client_id)
 
     @classmethod
-    def list(
-        cls, hydra: Hydra, limit: int = None, offset: int = None
+    def _list(
+        cls, api: HydraAdmin, limit: int = None, offset: int = None
     ) -> typing.List[OAuth2Client]:
-        url = urljoin(hydra.url, cls.endpoint)
+        url = urljoin(api.url_, cls.url_)
         params = filter_none({"limit": limit, "offset": offset})
-        response = hydra._request("GET", url, params=params)
+        response = api._request("GET", url, params=params)
         payload = response.json()
-        return [OAuth2Client(d, hydra) for d in payload]
+        return [OAuth2Client._from_dict(d, parent=api) for d in payload]
 
     @classmethod
     def create(
         cls,
-        hydra: Hydra,
+        api: HydraAdmin,
         allowed_cors_origins: typing.List[str] = None,
         audience: typing.List[str] = None,
         backchannel_logout_session_required: bool = None,
@@ -98,7 +123,7 @@ class OAuth2Client(AbstractEndpoint):
         tos_uri: str = None,
         userinfo_signed_response_alg: str = None,
     ) -> OAuth2Client:
-        url = urljoin(hydra.url, cls.endpoint)
+        url = urljoin(api.url_, cls.url_)
         data = filter_none(
             {
                 "allowed_cors_origins": allowed_cors_origins,
@@ -132,14 +157,14 @@ class OAuth2Client(AbstractEndpoint):
                 "userinfo_signed_response_alg": userinfo_signed_response_alg,
             }
         )
-        response = hydra._request("POST", url, json=data)
-        return cls(response.json(), hydra)
+        response = api._request("POST", url, json=data)
+        return cls._from_dict(response.json(), parent=api)
 
     @classmethod
-    def get(cls, client_id: str, hydra: Hydra) -> OAuth2Client:
-        url = urljoin(hydra.url, cls.endpoint, client_id)
-        response = hydra._request("GET", url)
-        return cls(response.json(), hydra)
+    def _get(cls, api: HydraAdmin, client_id: str) -> OAuth2Client:
+        url = urljoin(api.url_, cls.url_, client_id)
+        response = api._request("GET", url)
+        return cls._from_dict(response.json(), parent=api)
 
     def update(
         self,
@@ -206,10 +231,12 @@ class OAuth2Client(AbstractEndpoint):
                 "userinfo_signed_response_alg": userinfo_signed_response_alg,
             }
         )
-        response = self._request("PUT", self.url, json=data)
+        response = self._request("PUT", self.url_, json=data)
         payload = response.json()
-        self._update(payload)
+        # Create another instance, so all converters are run
+        other = self._from_dict(payload, parent=self.parent_)
+        self.__dict__.update(other.__dict__)
         return self
 
     def delete(self) -> None:
-        self._request("DELETE", self.url)
+        self._request("DELETE", self.url_)

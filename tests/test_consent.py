@@ -24,7 +24,7 @@ def test_list_consent_sessions(hydra_admin, accepted_consent_request):
     session_list = list(session_iter)
     assert session_list
     assert all(isinstance(c, ConsentSession) for c in session_list)
-    # assert oauth2_client in client_list
+    # assert accepted_consent_request in session_list
 
 
 def test_revoke_consent_sessions(hydra_admin, accepted_consent_request):
