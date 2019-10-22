@@ -81,10 +81,21 @@ class ResourceList(collections.UserList):
                 pass
 
 
-def list_attr(klass: typing.Type[Entity]) -> typing.Any:
+def list_attr(klass: typing.Type[Entity], factory=None) -> typing.Any:
     def converter(entity_list: typing.List[dict]) -> ResourceList:
         if entity_list is None:
             entity_list = []
         return ResourceList(klass._from_dict(d) for d in entity_list)
 
-    return attr.ib(converter=converter)
+    return attr.ib(converter=converter, factory=factory)
+
+
+def optional_from_dict(
+    klass: typing.Type[T]
+) -> typing.Callable[[dict], typing.Optional[T]]:
+    def converter(data: dict) -> typing.Optional[T]:
+        if data is None:
+            return None
+        return klass._from_dict(data)
+
+    return converter

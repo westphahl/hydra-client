@@ -1,5 +1,6 @@
 import typing
 
+import attr
 import requests
 
 from .model import Resource

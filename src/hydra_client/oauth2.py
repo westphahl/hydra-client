@@ -6,7 +6,7 @@ import typing
 import attr
 import dateutil.parser
 
-from .model import Entity, Resource
+from .model import Entity, list_attr, optional_from_dict, Resource
 from .utils import filter_none, urljoin
 
 if typing.TYPE_CHECKING:
@@ -36,7 +36,7 @@ class JSONWebKey(Entity):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class JSONWebKeySet(Entity):
-    keys = typing.List[JSONWebKey]
+    keys: typing.List[JSONWebKey] = list_attr(JSONWebKey, factory=list)
 
 
 @attr.s(auto_attribs=True, kw_only=True)
@@ -56,7 +56,10 @@ class OAuth2Client(Resource):
     frontchannel_logout_session_required: bool = False
     frontchannel_logout_uri: str = ""
     grant_types: typing.List[str]
-    jwks: typing.Optional[JSONWebKeySet] = None
+    jwks: typing.Optional[JSONWebKeySet] = attr.ib(
+        converter=optional_from_dict(JSONWebKeySet),  # type: ignore
+        default=None,
+    )
     jwks_uri: str = ""
     logo_uri: str
     owner: str

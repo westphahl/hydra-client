@@ -16,8 +16,13 @@ if typing.TYPE_CHECKING:
 @attr.s(auto_attribs=True, kw_only=True)
 class LoginRequest(Resource):
     challenge: str
-    client: OAuth2Client
-    oidc_context: OpenIDConnectContext
+    client: OAuth2Client = attr.ib(
+        converter=OAuth2Client._from_dict  # type: ignore
+    )
+    oidc_context: OpenIDConnectContext = attr.ib(
+        converter=OpenIDConnectContext._from_dict  # type: ignore
+    )
+
     request_url: str
     requested_access_token_audience: typing.List[str]
     requested_scope: typing.List[str]

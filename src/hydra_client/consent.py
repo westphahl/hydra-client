@@ -5,7 +5,7 @@ import typing
 import attr
 
 from .common import OpenIDConnectContext
-from .model import Entity, Resource
+from .model import Entity, optional_from_dict, Resource
 from .oauth2 import OAuth2Client
 from .utils import filter_none, urljoin
 
@@ -17,11 +17,15 @@ if typing.TYPE_CHECKING:
 class ConsentRequest(Resource):
     acr: str
     challenge: str
-    client: OAuth2Client
+    client: OAuth2Client = attr.ib(
+        converter=OAuth2Client._from_dict  # type: ignore
+    )
     context: dict = attr.ib(factory=dict)
     login_challenge: str
     login_session_id: str
-    oidc_context = OpenIDConnectContext
+    oidc_context: OpenIDConnectContext = attr.ib(
+        converter=OpenIDConnectContext._from_dict  # type: ignore
+    )
     request_url: str
     requested_access_token_audience: typing.List[str]
     requested_scope: typing.List[str]
@@ -101,12 +105,17 @@ class ConsentRequestSession(Entity):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class ConsentSession(Resource):
-    consent_request: ConsentRequest
+    consent_request: ConsentRequest = attr.ib(
+        converter=ConsentRequest._from_dict  # type: ignore
+    )
     grant_access_token_audience: typing.List[str]
     grant_scope: typing.List[str]
     remember: bool
     remember_for: int
-    session: ConsentRequestSession
+    session: typing.Optional[ConsentRequestSession] = attr.ib(
+        converter=optional_from_dict(ConsentRequestSession),  # type: ignore
+        default=None,
+    )
 
     url_ = "/oauth2/auth/sessions/consent"
 
