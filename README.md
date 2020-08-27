@@ -1,6 +1,9 @@
-Python client library for ORY Hydra
-===================================
+DEPRECATED
+==========
 
+**This library is no longer maintained. Please use the official [ORY Hydra package](https://github.com/ory/sdk/tree/master/clients/hydra/python).**
+
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 [![Build Status](https://travis-ci.org/westphahl/hydra-client.svg?branch=master)](https://travis-ci.org/westphahl/hydra-client)
 
 Python wrapper for the [ORY Hydra](https://www.ory.sh/docs/hydra/) OAuth2 and
